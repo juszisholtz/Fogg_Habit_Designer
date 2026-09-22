@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Golden Behaviors — a Tiny Habits swarm builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF8F2;
+    --paper-dim:#F3EFE5;
+    --ink:#2B2620;
+    --ink-soft:#6B6559;
+    --slate:#3C4A5E;
+    --slate-deep:#2C3849;
+    --sky:#CFE0EC;
+    --sky-line:#9FBCD0;
+    --gold:#C99A3B;
+    --gold-soft:#F3E3BE;
+    --line:#E1DCCC;
+    --radius-s:6px;
+    --radius-m:14px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    line-height:1.5;
+    padding-bottom:80px;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px;}
+
+  header.page{padding:56px 0 32px;}
+  header.page h1{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:500;
+    font-size:clamp(28px,5vw,40px);
+    letter-spacing:-0.01em;
+    margin:0 0 10px;
+  }
+  header.page p{
+    color:var(--ink-soft);
+    font-size:15.5px;
+    max-width:56ch;
+    margin:0;
+  }
+  header.page p a{color:var(--slate);}
+
+  section{margin-top:56px;}
+  .step-label{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  h2{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:500;
+    font-size:22px;
+    margin:0 0 18px;
+  }
+
+  /* --- Aspiration input --- */
+  .aspiration-row{display:flex;gap:10px;flex-wrap:wrap;}
+  input[type=text]{
+    flex:1;
+    min-width:220px;
+    font-family:inherit;
+    font-size:15px;
+    padding:12px 14px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-s);
+    background:#fff;
+    color:var(--ink);
+  }
+  input[type=text]:focus{outline:2px solid var(--slate);outline-offset:1px;}
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    border:none;
+    border-radius:var(--radius-s);
+    padding:12px 18px;
+    cursor:pointer;
+    background:var(--slate);
+    color:#fff;
+    transition:background .15s ease;
+  }
+  button:hover{background:var(--slate-deep);}
+  button.ghost{
+    background:transparent;
+    color:var(--ink-soft);
+    border:1px solid var(--line);
+  }
+  button.ghost:hover{background:var(--paper-dim);color:var(--ink);}
+  button:disabled{opacity:.45;cursor:not-allowed;}
+
+  /* --- Swarm arena --- */
+  .arena{
+    position:relative;
+    width:100%;
+    aspect-ratio:1/1;
+    max-height:560px;
+    margin-top:28px;
+  }
+  .arena svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+  .arena svg line{stroke:var(--sky-line);stroke-width:1.4;}
+
+  .cloud{
+    position:absolute;
+    left:50%;top:50%;
+    transform:translate(-50%,-50%);
+    width:min(46%,230px);
+    min-height:120px;
+    background:var(--slate);
+    border-radius:44% 56% 52% 48% / 58% 48% 52% 42%;
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:20px 18px;
+    box-shadow:0 10px 30px -12px rgba(44,56,73,.5);
+  }
+  .cloud .eyebrow{font-size:11px;color:#B9C7D3;margin-bottom:6px;}
+  .cloud .text{
+    font-family:'Fraunces',Georgia,serif;
+    font-size:clamp(15px,2.4vw,19px);
+    font-weight:500;
+    line-height:1.25;
+  }
+  .cloud .text.placeholder{color:#8EA1B3;font-style:italic;font-weight:400;}
+
+  .behavior-chip{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    background:var(--sky);
+    border:1px solid var(--sky-line);
+    border-radius:999px;
+    padding:7px 13px;
+    font-size:12.5px;
+    font-weight:500;
+    color:var(--ink);
+    max-width:130px;
+    text-align:center;
+    line-height:1.25;
+    white-space:normal;
+  }
+  .behavior-chip .num{
+    display:inline-block;
+    font-weight:700;
+    color:var(--slate-deep);
+    margin-right:4px;
+  }
+
+  .empty-hint{
+    color:var(--ink-soft);
+    font-size:13.5px;
+    text-align:center;
+    padding-top:8px;
+  }
+
+  /* --- Add behavior form --- */
+  .add-behavior-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;}
+
+  /* --- Matrix section --- */
+  .matrix-panel{
+    display:grid;
+    grid-template-columns:34px 1fr;
+    grid-template-rows:1fr 40px;
+    gap:10px;
+  }
+  .axis-label-y{
+    grid-column:1;grid-row:1;
+    writing-mode:vertical-rl;
+    transform:rotate(180deg);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:space-between;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    padding:6px 0;
+  }
+  .axis-label-y strong{font-size:12.5px;color:var(--ink);font-weight:600;}
+  .axis-label-x{
+    grid-column:2;grid-row:2;
+    display:flex;
+    justify-content:space-between;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    padding:0 6px;
+  }
+  .axis-label-x strong{font-size:12.5px;color:var(--ink);font-weight:600;}
+
+  .grid-area{
+    grid-column:2;grid-row:1;
+    position:relative;
+    aspect-ratio:1/1;
+    background:
+      repeating-linear-gradient(to right, var(--line) 0 1px, transparent 1px 10%),
+      repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px 10%),
+      #fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    touch-action:none;
+    overflow:hidden;
+  }
+  .golden-zone{
+    position:absolute;
+    top:0;right:0;
+    width:42%;height:42%;
+    background:radial-gradient(circle at 78% 22%, rgba(201,154,59,.28), rgba(201,154,59,0) 72%);
+    pointer-events:none;
+    display:flex;
+    align-items:flex-start;
+    justify-content:flex-end;
+  }
+  .golden-zone span{
+    font-size:10.5px;
+    font-weight:600;
+    color:#9A7526;
+    background:var(--gold-soft);
+    padding:4px 8px;
+    border-radius:999px;
+    margin:8px;
+    white-space:nowrap;
+  }
+
+  .token{
+    position:absolute;
+    width:34px;height:34px;
+    border-radius:50%;
+    background:var(--slate);
+    color:#fff;
+    font-size:13px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transform:translate(-50%,-50%);
+    cursor:grab;
+    user-select:none;
+    touch-action:none;
+    box-shadow:0 3px 8px -2px rgba(44,56,73,.45);
+    z-index:2;
+  }
+  .token.dragging{cursor:grabbing;z-index:5;box-shadow:0 8px 20px -4px rgba(44,56,73,.55);}
+  .token.snap-anim{transition:left .22s cubic-bezier(.34,1.56,.64,1), top .22s cubic-bezier(.34,1.56,.64,1);}
+  .token.golden{background:var(--gold);box-shadow:0 0 0 4px var(--gold-soft),0 4px 10px -2px rgba(201,154,59,.6);}
+
+  .tray{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:22px;
+    padding:16px;
+    background:var(--paper-dim);
+    border-radius:var(--radius-m);
+    min-height:66px;
+  }
+  .tray-token{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:7px 12px 7px 8px;
+    font-size:12.5px;
+    cursor:grab;
+    touch-action:none;
+    user-select:none;
+  }
+  .tray-token .num{
+    width:20px;height:20px;
+    border-radius:50%;
+    background:var(--slate);
+    color:#fff;
+    font-size:11px;
+    font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .tray-empty{color:var(--ink-soft);font-size:13px;}
+
+  .floating-token{
+    position:fixed;
+    width:34px;height:34px;
+    border-radius:50%;
+    background:var(--slate-deep);
+    color:#fff;
+    font-size:13px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none;
+    z-index:50;
+    box-shadow:0 8px 20px -4px rgba(0,0,0,.4);
+    transform:translate(-50%,-50%);
+  }
+
+  /* --- Behavior list --- */
+  ol.behavior-list{
+    list-style:none;
+    margin:22px 0 0;
+    padding:0;
+    display:grid;
+    gap:8px;
+  }
+  ol.behavior-list li{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:14px;
+    padding:9px 12px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius-s);
+  }
+  ol.behavior-list .num{
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--slate);
+    color:#fff;
+    font-size:11.5px;
+    font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  ol.behavior-list .status{
+    margin-left:auto;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    flex-shrink:0;
+  }
+  ol.behavior-list button.remove{
+    background:transparent;
+    color:var(--ink-soft);
+    padding:2px 6px;
+    font-size:16px;
+    line-height:1;
+    flex-shrink:0;
+  }
+  ol.behavior-list button.remove:hover{color:#B5482F;background:transparent;}
+
+  /* --- Golden results --- */
+  .golden-results{
+    margin-top:22px;
+    padding:22px;
+    background:var(--slate-deep);
+    border-radius:var(--radius-m);
+    color:#fff;
+  }
+  .golden-results h3{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:500;
+    font-size:19px;
+    margin:0 0 4px;
+    color:var(--gold-soft);
+  }
+  .golden-results p.sub{
+    color:#B9C3CF;
+    font-size:13.5px;
+    margin:0 0 16px;
+  }
+  .golden-results ul{list-style:none;margin:0;padding:0;display:grid;gap:8px;}
+  .golden-results li{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    background:rgba(255,255,255,.06);
+    border-radius:var(--radius-s);
+    padding:10px 12px;
+    font-size:14px;
+  }
+  .golden-results .num{
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--gold);
+    color:#2C2107;
+    font-size:11.5px;
+    font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .golden-results .none{color:#B9C3CF;font-size:13.5px;}
+
+  footer{
+    max-width:880px;
+    margin:64px auto 0;
+    padding:20px 24px 0;
+    border-top:1px solid var(--line);
+    font-size:12.5px;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  @media (max-width:560px){
+    .matrix-panel{grid-template-columns:26px 1fr;}
+    .axis-label-y strong{font-size:11px;}
+    .axis-label-x strong{font-size:11px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="page">
+    <h1>Golden Behaviors</h1>
+    <p>Based on the swarm-of-behaviors method from BJ Fogg's <em>Tiny Habits</em>. Name an aspiration, surround it with small behaviors that could get you there, then drag each one onto the grid to see which ones deserve your focus first.</p>
+  </header>
+
+  <!-- STEP 1: ASPIRATION + SWARM -->
+  <section id="swarm-section">
+    <div class="step-label">Step 1</div>
+    <h2>Name your aspiration</h2>
+    <div class="aspiration-row">
+      <input type="text" id="aspirationInput" placeholder="e.g. Reduce my stress" maxlength="60">
+    </div>
+
+    <div class="arena" id="arena">
+      <svg id="arenaLines"></svg>
+      <div class="cloud">
+        <div class="eyebrow">Aspiration / Outcome</div>
+        <div class="text placeholder" id="cloudText">Your aspiration</div>
+      </div>
+      <!-- behavior chips injected here -->
+    </div>
+    <div class="empty-hint" id="arenaEmptyHint">Add a few behaviors below — they'll appear around the cloud.</div>
+
+    <div class="add-behavior-row">
+      <input type="text" id="behaviorInput" placeholder="A small behavior, e.g. 'Say one nice thing about myself'" maxlength="70">
+      <button id="addBehaviorBtn">Add behavior</button>
+    </div>
+  </section>
+
+  <!-- STEP 2: MATRIX -->
+  <section id="matrix-section">
+    <div class="step-label">Step 2</div>
+    <h2>Plot each behavior</h2>
+    <p style="color:var(--ink-soft);font-size:14px;margin:-8px 0 4px;">Drag a numbered behavior from the tray onto the grid. It'll lock into place once you let go.</p>
+
+    <div class="matrix-panel">
+      <div class="axis-label-y">
+        <span><strong>High-Impact</strong><br>Very effective at helping me <span id="axisAspTop">[your aspiration]</span></span>
+        <span><strong>Low-Impact</strong><br>Not effective at helping me <span id="axisAspBottom">[your aspiration]</span></span>
+      </div>
+      <div class="grid-area" id="gridArea">
+        <div class="golden-zone"><span>Golden Behaviors land here</span></div>
+        <!-- placed tokens injected here -->
+      </div>
+      <div class="axis-label-x">
+        <span>No — I can't get myself to do this</span>
+        <span>Yes — I can get myself to do this</span>
+      </div>
+    </div>
+
+    <div class="tray" id="tray">
+      <span class="tray-empty" id="trayEmptyHint">Behaviors you add will show up here, ready to drag.</span>
+    </div>
+  </section>
+
+  <!-- STEP 3: LIST -->
+  <section id="list-section">
+    <div class="step-label">Step 3</div>
+    <h2>All behaviors</h2>
+    <ol class="behavior-list" id="behaviorList"></ol>
+  </section>
+
+  <!-- STEP 4: GOLDEN RESULTS -->
+  <section id="results-section">
+    <div class="golden-results">
+      <h3>Your Golden Behaviors</h3>
+      <p class="sub">High impact, and you can actually get yourself to do them. Start here.</p>
+      <ul id="goldenList"></ul>
+    </div>
+  </section>
+
+  <div style="margin-top:40px;">
+    <button class="ghost" id="resetBtn">Reset everything</button>
+  </div>
+</div>
+
+<footer>
+  <span>Built from BJ Fogg's <em>Tiny Habits</em> swarm-of-behaviors method.</span>
+  <span>Your data is saved only in this browser.</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "tinyHabitsSwarmState";
+  var GRID_STEP = 5;       // snap granularity (%)
+  var GOLDEN_MIN = 60;     // ability & impact threshold for "golden"
+
+  var state = loadState() || { aspiration: "", behaviors: [] };
+
+  var els = {
+    aspirationInput: document.getElementById('aspirationInput'),
+    cloudText: document.getElementById('cloudText'),
+    arena: document.getElementById('arena'),
+    arenaLines: document.getElementById('arenaLines'),
+    arenaEmptyHint: document.getElementById('arenaEmptyHint'),
+    behaviorInput: document.getElementById('behaviorInput'),
+    addBehaviorBtn: document.getElementById('addBehaviorBtn'),
+    gridArea: document.getElementById('gridArea'),
+    tray: document.getElementById('tray'),
+    trayEmptyHint: document.getElementById('trayEmptyHint'),
+    behaviorList: document.getElementById('behaviorList'),
+    goldenList: document.getElementById('goldenList'),
+    axisAspTop: document.getElementById('axisAspTop'),
+    axisAspBottom: document.getElementById('axisAspBottom'),
+    resetBtn: document.getElementById('resetBtn')
+  };
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return null;
+      var parsed = JSON.parse(raw);
+      if(!parsed || !Array.isArray(parsed.behaviors)) return null;
+      return parsed;
+    }catch(e){ return null; }
+  }
+
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch(e){ /* storage unavailable — app still works, just won't persist */ }
+  }
+
+  function nextNum(){
+    var max = 0;
+    state.behaviors.forEach(function(b){ if(b.num > max) max = b.num; });
+    return max + 1;
+  }
+
+  // ---------- Aspiration ----------
+  function renderAspiration(){
+    var text = state.aspiration.trim();
+    if(text){
+      els.cloudText.textContent = text;
+      els.cloudText.classList.remove('placeholder');
+      els.axisAspTop.textContent = text;
+      els.axisAspBottom.textContent = text;
+    } else {
+      els.cloudText.textContent = "Your aspiration";
+      els.cloudText.classList.add('placeholder');
+      els.axisAspTop.textContent = "[your aspiration]";
+      els.axisAspBottom.textContent = "[your aspiration]";
+    }
+  }
+  els.aspirationInput.value = state.aspiration;
+  els.aspirationInput.addEventListener('input', function(){
+    state.aspiration = els.aspirationInput.value;
+    renderAspiration();
+    saveState();
+  });
+
+  // ---------- Swarm (radial chips) ----------
+  function renderSwarm(){
+    Array.prototype.forEach.call(els.arena.querySelectorAll('.behavior-chip'), function(el){ el.remove(); });
+    els.arenaLines.innerHTML = '';
+
+    var n = state.behaviors.length;
+    els.arenaEmptyHint.style.display = n === 0 ? 'block' : 'none';
+
+    state.behaviors.forEach(function(b, i){
+      var angle = (-90 + (360 / n) * i) * (Math.PI / 180);
+      var radius = 40;
+      var x = 50 + radius * Math.cos(angle);
+      var y = 50 + radius * Math.sin(angle);
+
+      var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1','50%'); line.setAttribute('y1','50%');
+      line.setAttribute('x2', x + '%'); line.setAttribute('y2', y + '%');
+      els.arenaLines.appendChild(line);
+
+      var chip = document.createElement('div');
+      chip.className = 'behavior-chip';
+      chip.style.left = x + '%';
+      chip.style.top = y + '%';
+      chip.innerHTML = '<span class="num">' + b.num + '</span>' + escapeHtml(b.text);
+      els.arena.appendChild(chip);
+    });
+  }
+
+  els.addBehaviorBtn.addEventListener('click', addBehavior);
+  els.behaviorInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); addBehavior(); }
+  });
+  function addBehavior(){
+    var text = els.behaviorInput.value.trim();
+    if(!text) return;
+    state.behaviors.push({ id: 'b' + Date.now() + Math.random().toString(16).slice(2), text: text, num: nextNum(), placed: false, x: null, y: null });
+    els.behaviorInput.value = '';
+    saveState();
+    renderAll();
+    els.behaviorInput.focus();
+  }
+
+  function removeBehavior(id){
+    state.behaviors = state.behaviors.filter(function(b){ return b.id !== id; });
+    saveState();
+    renderAll();
+  }
+
+  function escapeHtml(s){
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  // ---------- Tray + Grid tokens ----------
+  function renderTrayAndGrid(){
+    els.tray.innerHTML = '';
+    Array.prototype.forEach.call(els.gridArea.querySelectorAll('.token'), function(el){ el.remove(); });
+
+    var unplaced = state.behaviors.filter(function(b){ return !b.placed; });
+    els.trayEmptyHint.style.display = (unplaced.length === 0 && state.behaviors.length > 0) ? 'none' : (state.behaviors.length === 0 ? 'block' : 'none');
+    if(state.behaviors.length === 0){
+      els.tray.appendChild(els.trayEmptyHint);
+    }
+
+    unplaced.forEach(function(b){
+      var t = document.createElement('div');
+      t.className = 'tray-token';
+      t.dataset.id = b.id;
+      t.innerHTML = '<span class="num">' + b.num + '</span>' + escapeHtml(b.text);
+      t.addEventListener('pointerdown', function(e){ startDrag(e, b.id); });
+      els.tray.appendChild(t);
+    });
+
+    state.behaviors.filter(function(b){ return b.placed; }).forEach(function(b){
+      renderGridToken(b);
+    });
+
+    updateGolden();
+  }
+
+  function renderGridToken(b){
+    var tok = document.createElement('div');
+    tok.className = 'token';
+    tok.dataset.id = b.id;
+    tok.style.left = b.x + '%';
+    tok.style.top = (100 - b.y) + '%'; // y stored as impact (100=high=visual top)
+    tok.textContent = b.num;
+    tok.title = b.text;
+    tok.addEventListener('pointerdown', function(e){ startDrag(e, b.id); });
+    els.gridArea.appendChild(tok);
+  }
+
+  // ---------- Dragging ----------
+  var dragging = null; // { id, floatingEl }
+
+  function startDrag(e, id){
+    e.preventDefault();
+    var behavior = state.behaviors.find(function(b){ return b.id === id; });
+    if(!behavior) return;
+
+    var floating = document.createElement('div');
+    floating.className = 'floating-token';
+    floating.textContent = behavior.num;
+    document.body.appendChild(floating);
+    positionFloating(floating, e.clientX, e.clientY);
+
+    var sourceGridToken = els.gridArea.querySelector('.token[data-id="' + cssEscape(id) + '"]');
+    if(sourceGridToken) sourceGridToken.style.opacity = '0';
+    var sourceTrayToken = els.tray.querySelector('.tray-token[data-id="' + cssEscape(id) + '"]');
+    if(sourceTrayToken) sourceTrayToken.style.opacity = '0.35';
+
+    dragging = { id: id, floating: floating, sourceGridToken: sourceGridToken, sourceTrayToken: sourceTrayToken };
+
+    window.addEventListener('pointermove', onDragMove);
+    window.addEventListener('pointerup', onDragEnd);
+  }
+
+  function onDragMove(e){
+    if(!dragging) return;
+    positionFloating(dragging.floating, e.clientX, e.clientY);
+  }
+
+  function onDragEnd(e){
+    if(!dragging) return;
+    window.removeEventListener('pointermove', onDragMove);
+    window.removeEventListener('pointerup', onDragEnd);
+
+    var behavior = state.behaviors.find(function(b){ return b.id === dragging.id; });
+    var rect = els.gridArea.getBoundingClientRect();
+    var inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+
+    dragging.floating.remove();
+
+    if(inside){
+      var xPct = ((e.clientX - rect.left) / rect.width) * 100;
+      var yPctFromTop = ((e.clientY - rect.top) / rect.height) * 100;
+      xPct = snap(clamp(xPct, 0, 100));
+      var impact = snap(clamp(100 - yPctFromTop, 0, 100));
+
+      behavior.placed = true;
+      behavior.x = xPct;
+      behavior.y = impact;
+      saveState();
+      renderTrayAndGrid();
+
+      var newTok = els.gridArea.querySelector('.token[data-id="' + cssEscape(behavior.id) + '"]');
+      if(newTok){
+        newTok.classList.add('snap-anim');
+        setTimeout(function(){ newTok.classList.remove('snap-anim'); }, 240);
+      }
+    } else {
+      if(dragging.sourceGridToken) dragging.sourceGridToken.style.opacity = '1';
+      if(dragging.sourceTrayToken) dragging.sourceTrayToken.style.opacity = '1';
+    }
+
+    dragging = null;
+  }
+
+  function positionFloating(el, x, y){
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+  }
+  function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+  function snap(v){ return Math.round(v / GRID_STEP) * GRID_STEP; }
+  function cssEscape(s){ return String(s).replace(/[^a-zA-Z0-9_-]/g, function(c){ return '\\' + c; }); }
+
+  // ---------- Behavior list ----------
+  function renderList(){
+    els.behaviorList.innerHTML = '';
+    state.behaviors.forEach(function(b){
+      var li = document.createElement('li');
+      var status = b.placed ? 'Plotted' : 'Not plotted yet';
+      li.innerHTML =
+        '<span class="num">' + b.num + '</span>' +
+        '<span>' + escapeHtml(b.text) + '</span>' +
+        '<span class="status">' + status + '</span>' +
+        '<button class="remove" title="Remove" aria-label="Remove behavior">&times;</button>';
+      li.querySelector('.remove').addEventListener('click', function(){ removeBehavior(b.id); });
+      els.behaviorList.appendChild(li);
+    });
+  }
+
+  // ---------- Golden behaviors ----------
+  function updateGolden(){
+    Array.prototype.forEach.call(els.gridArea.querySelectorAll('.token'), function(tok){
+      var b = state.behaviors.find(function(x){ return x.id === tok.dataset.id; });
+      if(b && b.x >= GOLDEN_MIN && b.y >= GOLDEN_MIN){
+        tok.classList.add('golden');
+      } else {
+        tok.classList.remove('golden');
+      }
+    });
+
+    var golden = state.behaviors.filter(function(b){ return b.placed && b.x >= GOLDEN_MIN && b.y >= GOLDEN_MIN; });
+    els.goldenList.innerHTML = '';
+    if(golden.length === 0){
+      var li = document.createElement('li');
+      li.className = 'none';
+      li.style.background = 'transparent';
+      li.textContent = 'Plot your behaviors on the grid — the ones that land in the top-right corner will show up here.';
+      els.goldenList.appendChild(li);
+      return;
+    }
+    golden.forEach(function(b){
+      var li = document.createElement('li');
+      li.innerHTML = '<span class="num">' + b.num + '</span><span>' + escapeHtml(b.text) + '</span>';
+      els.goldenList.appendChild(li);
+    });
+  }
+
+  // ---------- Reset ----------
+  els.resetBtn.addEventListener('click', function(){
+    if(!confirm('Clear your aspiration and all behaviors? This can\'t be undone.')) return;
+    state = { aspiration: '', behaviors: [] };
+    els.aspirationInput.value = '';
+    saveState();
+    renderAll();
+  });
+
+  // ---------- Render orchestration ----------
+  function renderAll(){
+    renderAspiration();
+    renderSwarm();
+    renderTrayAndGrid();
+    renderList();
+  }
+
+  window.addEventListener('resize', renderSwarm);
+
+  renderAll();
+})();
+</script>
+
+</body>
+</html>
