@@ -165,13 +165,36 @@
   }
 
   /* --- Add behavior form --- */
-  .add-behavior-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;}
+  .recipe-form{
+    margin-top:22px;
+    padding:18px 20px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    display:grid;
+    gap:13px;
+  }
+  .recipe-row{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .recipe-row label{
+    font-family:'Fraunces',Georgia,serif;
+    font-size:15px;
+    color:var(--ink);
+    flex:0 0 auto;
+    min-width:150px;
+  }
+  .recipe-row input{flex:1;min-width:180px;}
+  .recipe-form button{align-self:flex-start;margin-top:2px;}
 
   /* --- Matrix section --- */
   .matrix-panel{
     display:grid;
-    grid-template-columns:34px 1fr;
-    grid-template-rows:1fr 40px;
+    grid-template-columns:36px 1fr;
+    grid-template-rows:1fr 54px;
     gap:10px;
   }
   .axis-label-y{
@@ -182,20 +205,20 @@
     flex-direction:column;
     align-items:center;
     justify-content:space-between;
-    font-size:11.5px;
-    color:var(--ink-soft);
     padding:6px 0;
   }
-  .axis-label-y strong{font-size:12.5px;color:var(--ink);font-weight:600;}
+  .axis-label-y .axis-title{font-size:13.5px;color:var(--ink);font-weight:700;letter-spacing:.02em;}
+  .axis-label-y .axis-end{font-size:10.5px;color:var(--ink-soft);font-weight:500;}
   .axis-label-x{
     grid-column:2;grid-row:2;
     display:flex;
-    justify-content:space-between;
-    font-size:11.5px;
-    color:var(--ink-soft);
-    padding:0 6px;
+    flex-direction:column;
+    justify-content:center;
+    gap:5px;
+    padding:0 4px;
   }
-  .axis-label-x strong{font-size:12.5px;color:var(--ink);font-weight:600;}
+  .axis-label-x .axis-title{font-size:13.5px;color:var(--ink);font-weight:700;letter-spacing:.02em;text-align:center;}
+  .axis-label-x .axis-ends{display:flex;justify-content:space-between;color:var(--ink-soft);font-size:10.5px;font-weight:500;}
 
   .grid-area{
     grid-column:2;grid-row:1;
@@ -205,10 +228,28 @@
       repeating-linear-gradient(to right, var(--line) 0 1px, transparent 1px 10%),
       repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px 10%),
       #fff;
-    border:1px solid var(--line);
+    border:2px solid var(--ink);
     border-radius:var(--radius-m);
     touch-action:none;
     overflow:hidden;
+  }
+  .axis-cross-h{
+    position:absolute;
+    left:0;right:0;top:50%;
+    height:2px;
+    background:var(--ink);
+    transform:translateY(-1px);
+    pointer-events:none;
+    z-index:1;
+  }
+  .axis-cross-v{
+    position:absolute;
+    top:0;bottom:0;left:50%;
+    width:2px;
+    background:var(--ink);
+    transform:translateX(-1px);
+    pointer-events:none;
+    z-index:1;
   }
   .golden-zone{
     position:absolute;
@@ -286,6 +327,17 @@
     display:flex;align-items:center;justify-content:center;
     flex-shrink:0;
   }
+  .tray-delete{
+    background:transparent;
+    color:var(--ink-soft);
+    padding:0 2px;
+    font-size:17px;
+    line-height:1;
+    font-weight:400;
+    border:none;
+    cursor:pointer;
+  }
+  .tray-delete:hover{color:#B5482F;background:transparent;}
   .tray-empty{color:var(--ink-soft);font-size:13px;}
 
   .floating-token{
@@ -333,6 +385,15 @@
     display:flex;align-items:center;justify-content:center;
     flex-shrink:0;
   }
+  ol.behavior-list .behavior-copy{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    flex:1;
+    min-width:0;
+  }
+  ol.behavior-list .behavior-main{font-size:14px;}
+  ol.behavior-list .behavior-sub{font-size:11.5px;color:var(--ink-soft);}
   ol.behavior-list .status{
     margin-left:auto;
     font-size:11.5px;
@@ -405,9 +466,10 @@
   }
 
   @media (max-width:560px){
-    .matrix-panel{grid-template-columns:26px 1fr;}
-    .axis-label-y strong{font-size:11px;}
-    .axis-label-x strong{font-size:11px;}
+    .matrix-panel{grid-template-columns:30px 1fr;}
+    .axis-label-y .axis-title{font-size:12px;}
+    .axis-label-x .axis-title{font-size:12px;}
+    .axis-label-x .axis-ends{font-size:9.5px;}
   }
 </style>
 </head>
@@ -437,8 +499,19 @@
     </div>
     <div class="empty-hint" id="arenaEmptyHint">Add a few behaviors below — they'll appear around the cloud.</div>
 
-    <div class="add-behavior-row">
-      <input type="text" id="behaviorInput" placeholder="A small behavior, e.g. 'Say one nice thing about myself'" maxlength="70">
+    <div class="recipe-form">
+      <div class="recipe-row">
+        <label for="anchorInput">After</label>
+        <input type="text" id="anchorInput" placeholder="I step out of the shower" maxlength="60">
+      </div>
+      <div class="recipe-row">
+        <label for="behaviorInput">I will</label>
+        <input type="text" id="behaviorInput" placeholder="say one nice thing about myself" maxlength="70">
+      </div>
+      <div class="recipe-row">
+        <label for="celebrationInput">And then celebrate by</label>
+        <input type="text" id="celebrationInput" placeholder="smiling at myself in the mirror" maxlength="60">
+      </div>
       <button id="addBehaviorBtn">Add behavior</button>
     </div>
   </section>
@@ -451,16 +524,22 @@
 
     <div class="matrix-panel">
       <div class="axis-label-y">
-        <span><strong>High-Impact</strong><br>Very effective at helping me <span id="axisAspTop">[your aspiration]</span></span>
-        <span><strong>Low-Impact</strong><br>Not effective at helping me <span id="axisAspBottom">[your aspiration]</span></span>
+        <span class="axis-end">High</span>
+        <span class="axis-title">Motivation</span>
+        <span class="axis-end">Low</span>
       </div>
       <div class="grid-area" id="gridArea">
         <div class="golden-zone"><span>Golden Behaviors land here</span></div>
+        <div class="axis-cross-h"></div>
+        <div class="axis-cross-v"></div>
         <!-- placed tokens injected here -->
       </div>
       <div class="axis-label-x">
-        <span>No — I can't get myself to do this</span>
-        <span>Yes — I can get myself to do this</span>
+        <div class="axis-title">Ability</div>
+        <div class="axis-ends">
+          <span>No — can't do it</span>
+          <span>Yes — can do it</span>
+        </div>
       </div>
     </div>
 
@@ -512,14 +591,14 @@
     arenaLines: document.getElementById('arenaLines'),
     arenaEmptyHint: document.getElementById('arenaEmptyHint'),
     behaviorInput: document.getElementById('behaviorInput'),
+    anchorInput: document.getElementById('anchorInput'),
+    celebrationInput: document.getElementById('celebrationInput'),
     addBehaviorBtn: document.getElementById('addBehaviorBtn'),
     gridArea: document.getElementById('gridArea'),
     tray: document.getElementById('tray'),
     trayEmptyHint: document.getElementById('trayEmptyHint'),
     behaviorList: document.getElementById('behaviorList'),
     goldenList: document.getElementById('goldenList'),
-    axisAspTop: document.getElementById('axisAspTop'),
-    axisAspBottom: document.getElementById('axisAspBottom'),
     resetBtn: document.getElementById('resetBtn')
   };
 
@@ -550,13 +629,9 @@
     if(text){
       els.cloudText.textContent = text;
       els.cloudText.classList.remove('placeholder');
-      els.axisAspTop.textContent = text;
-      els.axisAspBottom.textContent = text;
     } else {
       els.cloudText.textContent = "Your aspiration";
       els.cloudText.classList.add('placeholder');
-      els.axisAspTop.textContent = "[your aspiration]";
-      els.axisAspBottom.textContent = "[your aspiration]";
     }
   }
   els.aspirationInput.value = state.aspiration;
@@ -595,17 +670,34 @@
   }
 
   els.addBehaviorBtn.addEventListener('click', addBehavior);
+  els.anchorInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); els.behaviorInput.focus(); }
+  });
   els.behaviorInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); els.celebrationInput.focus(); }
+  });
+  els.celebrationInput.addEventListener('keydown', function(e){
     if(e.key === 'Enter'){ e.preventDefault(); addBehavior(); }
   });
   function addBehavior(){
-    var text = els.behaviorInput.value.trim();
-    if(!text) return;
-    state.behaviors.push({ id: 'b' + Date.now() + Math.random().toString(16).slice(2), text: text, num: nextNum(), placed: false, x: null, y: null });
+    var action = els.behaviorInput.value.trim();
+    var anchor = els.anchorInput.value.trim();
+    var celebration = els.celebrationInput.value.trim();
+    if(!action) { els.behaviorInput.focus(); return; }
+    state.behaviors.push({
+      id: 'b' + Date.now() + Math.random().toString(16).slice(2),
+      text: action,
+      anchor: anchor,
+      celebration: celebration,
+      num: nextNum(),
+      placed: false, x: null, y: null
+    });
+    els.anchorInput.value = '';
     els.behaviorInput.value = '';
+    els.celebrationInput.value = '';
     saveState();
     renderAll();
-    els.behaviorInput.focus();
+    els.anchorInput.focus();
   }
 
   function removeBehavior(id){
@@ -635,8 +727,15 @@
       var t = document.createElement('div');
       t.className = 'tray-token';
       t.dataset.id = b.id;
-      t.innerHTML = '<span class="num">' + b.num + '</span>' + escapeHtml(b.text);
-      t.addEventListener('pointerdown', function(e){ startDrag(e, b.id); });
+      t.innerHTML = '<span class="num">' + b.num + '</span>' + escapeHtml(b.text) +
+        '<button type="button" class="tray-delete" title="Remove" aria-label="Remove behavior">&times;</button>';
+      var delBtn = t.querySelector('.tray-delete');
+      delBtn.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
+      delBtn.addEventListener('click', function(e){ e.stopPropagation(); removeBehavior(b.id); });
+      t.addEventListener('pointerdown', function(e){
+        if(e.target.closest('.tray-delete')) return;
+        startDrag(e, b.id);
+      });
       els.tray.appendChild(t);
     });
 
@@ -739,9 +838,16 @@
     state.behaviors.forEach(function(b){
       var li = document.createElement('li');
       var status = b.placed ? 'Plotted' : 'Not plotted yet';
+      var subParts = [];
+      if(b.anchor) subParts.push('After ' + escapeHtml(b.anchor));
+      if(b.celebration) subParts.push('Celebrate: ' + escapeHtml(b.celebration));
+      var subLine = subParts.join(' · ');
       li.innerHTML =
         '<span class="num">' + b.num + '</span>' +
-        '<span>' + escapeHtml(b.text) + '</span>' +
+        '<div class="behavior-copy">' +
+          '<div class="behavior-main">I will ' + escapeHtml(b.text) + '</div>' +
+          (subLine ? '<div class="behavior-sub">' + subLine + '</div>' : '') +
+        '</div>' +
         '<span class="status">' + status + '</span>' +
         '<button class="remove" title="Remove" aria-label="Remove behavior">&times;</button>';
       li.querySelector('.remove').addEventListener('click', function(){ removeBehavior(b.id); });
